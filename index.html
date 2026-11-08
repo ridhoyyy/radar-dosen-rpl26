@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Kelas - Admin</title>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: #121212; 
+            color: #e5e7eb; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .card { 
+            background: #1e1e1e; 
+            padding: 2rem; 
+            border-radius: 12px; 
+            width: 90%; 
+            max-width: 320px; 
+            border: 1px solid #333;
+        }
+        label { font-size: 0.875rem; margin-bottom: 4px; display: block; color: #9ca3af; }
+        input, select, button { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 16px; 
+            border-radius: 8px; 
+            border: 1px solid #374151; 
+            background: #374151; 
+            color: white; 
+            box-sizing: border-box; 
+            font-size: 1rem;
+        }
+        input:focus, select:focus { outline: none; border-color: #5865F2; }
+        button { 
+            background: #5865F2; 
+            border: none; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            margin-bottom: 8px;
+        }
+        button:hover { background: #4752C4; }
+        #status-msg { text-align: center; font-size: 0.875rem; height: 20px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 style="margin-top: 0; text-align: center; color: white;">📡 Update Kelas</h2>
+        
+        <label>Ruangan</label>
+        <input type="text" id="ruangan" placeholder="Contoh: Lab301" autocomplete="off">
+
+        <label>Status</label>
+        <select id="status">
+            <option value="Hadir">Hadir</option>
+            <option value="Kosong">Kosong</option>
+            <option value="Selesai">Selesai</option>
+        </select>
+
+        <button id="btnKirim">Kirim Notifikasi</button>
+        <div id="status-msg"></div>
+    </div>
+
+    <script>
+        // 🔴 1. MASUKKAN URL WEBHOOK DISCORD DI SINI
+        const WEBHOOK_URL = "URL_WEBHOOK_DISCORD_ANDA_DI_SINI";
+
+        document.getElementById('btnKirim').addEventListener('click', async () => {
+            const ruangan = document.getElementById('ruangan').value.trim();
+            const status = document.getElementById('status').value;
+            const msgEl = document.getElementById('status-msg');
+            const btn = document.getElementById('btnKirim');
+
+            if (!ruangan) {
+                msgEl.style.color = "#f87171";
+                msgEl.innerText = "Isi ruangan terlebih dahulu!";
+                return;
+            }
+
+            btn.innerText = "Mengirim...";
+            btn.style.opacity = "0.7";
+
+            // 🔴 2. FORMAT PESAN DISCORD
+            // Jika Hadir, tag @everyone agar HP teman berbunyi. Jika tidak, hanya info biasa.
+            let textPesan = `Informasi: Dosen sudah ${status.toLowerCase()} di ruangan **${ruangan}**.`;
+            if (status === 'Hadir') {
+                textPesan = `🚨 @everyone **UPDATE KELAS**\nDosen sudah hadir di ruangan : **${ruangan}**`;
+            }
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: textPesan })
+                });
+
+                if (response.ok) {
+                    msgEl.style.color = "#4ade80";
+                    msgEl.innerText = "✅ Notifikasi terkirim ke Discord!";
+                    document.getElementById('ruangan').value = ""; // Bersihkan input
+                } else {
+                    throw new Error("Gagal");
+                }
+            } catch (err) {
+                msgEl.style.color = "#f87171";
+                msgEl.innerText = "❌ Gagal mengirim jaringan/URL salah.";
+            } finally {
+                btn.innerText = "Kirim Notifikasi";
+                btn.style.opacity = "1";
+                setTimeout(() => msgEl.innerText = "", 3000);
+            }
+        });
+    </script>
+</body>
+</html>
